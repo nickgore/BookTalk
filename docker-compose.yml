@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: booktalk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gitbook_rag}
+      POSTGRES_USER: ${POSTGRES_USER:-retool}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - booktalk-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-retool} -d ${POSTGRES_DB:-gitbook_rag}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Retool self-hosted
+  retool:
+    image: tryretool/backend:latest
+    container_name: booktalk-retool
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      
+      # Database connection
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_SSL_ENABLED: "false"
+      
+      # Retool secrets (generate secure random strings)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+
+      BASE_DOMAIN: ${BASE_DOMAIN:-localhost:3000}
+      # Required URLs for workflows and code execution
+      WORKFLOW_BACKEND_HOST: ${WORKFLOW_BACKEND_HOST:-http://localhost:3000}
+      CODE_EXECUTOR_INGRESS_DOMAIN: ${CODE_EXECUTOR_INGRESS_DOMAIN:-http://localhost:3000}
+      
+      # License key (required for self-hosted)
+      LICENSE_KEY: ${LICENSE_KEY}
+      
+      # Optional API keys for later
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      
+    ports:
+      - "3000:3000"
+    volumes:
+      - retool_data:/retool_backend/retool_data
+    networks:
+      - booktalk-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  # Portainer for Docker container management
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: booktalk-portainer
+    restart: unless-stopped
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - booktalk-network
+
+volumes:
+  postgres_data:
+    driver: local
+  retool_data:
+    driver: local
+  portainer_data:
+    driver: local
+
+networks:
+  booktalk-network:
+    driver: bridge
