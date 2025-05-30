@@ -1,0 +1,10 @@
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+.docker/
+logs/
+.pytest_cache/
+.vscode/
