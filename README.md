@@ -34,7 +34,7 @@ git clone git@github.com:nickgore/BookTalk.git
 cd BookTalk
 cp .env.example .env
 # !!! Edit .env with your valid retool license key
-
+source .env
 # Launch all services
 docker-compose up -d
 ```

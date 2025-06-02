@@ -1,0 +1,14 @@
+# Core dependencies
+langchain==0.3.25
+langchain-community==0.3.25
+
+# Database
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.41
+pgvector==0.4.1
+
+# ML/Embeddings
+sentence-transformers==4.1.0
+torch==2.7.1
+transformers>=4.51.4
+numpy==2.3.0

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     document_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
     chunk_text TEXT NOT NULL,
     chunk_index INTEGER NOT NULL,
-    embedding vector(768), -- BERT base embedding size
+    embedding vector(384), -- BERT embedding size (all-MiniLM-L6-v2)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
